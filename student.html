@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UTMS — Student Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--surface2:#f7f9fc;--border:#e2e8f0;
+  --green:#00a372;--green-light:#e6f7f2;--blue:#2563eb;--blue-light:#eff6ff;
+  --amber:#d97706;--amber-light:#fffbeb;--red:#dc2626;
+  --text:#0f172a;--muted:#64748b;--dim:#cbd5e1;
+  --font-d:'Syne',sans-serif;--font-m:'Space Mono',monospace;--font-b:'DM Sans',sans-serif;
+  --radius:10px;--shadow:0 1px 3px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.06);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:14px;min-height:100vh}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:2px solid var(--green);display:flex;align-items:center;padding:0 32px;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,163,114,.1)}
+.nav-logo{font-family:var(--font-d);font-weight:800;font-size:18px;letter-spacing:-1px;text-decoration:none;color:var(--text)}
+.nav-logo span{color:var(--green)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.nav-badge{font-family:var(--font-m);font-size:10px;padding:4px 10px;border-radius:20px;background:var(--green-light);color:var(--green);border:1px solid rgba(0,163,114,.2);letter-spacing:.05em}
+.nav-link{padding:8px 16px;border-radius:6px;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:.08em;text-decoration:none;color:var(--muted);border:1px solid var(--border);transition:all .2s}
+.nav-link:hover{border-color:var(--green);color:var(--green)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 60px)}
+
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 0;overflow-y:auto;position:sticky;top:60px;height:calc(100vh - 60px)}
+.sidebar-section{padding:0 20px 16px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.sidebar-label{font-family:var(--font-m);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+
+/* Student lookup */
+.lookup-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px}
+.lookup-input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-family:var(--font-b);font-size:13px;color:var(--text);background:var(--surface);outline:none;transition:border .2s;margin-bottom:8px}
+.lookup-input:focus{border-color:var(--green)}
+.btn{width:100%;padding:9px;border:none;border-radius:6px;font-family:var(--font-m);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#00875f}
+.btn-outline{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue)}
+
+/* Student info card */
+#student-info-card{display:none;margin-top:12px;background:var(--green-light);border:1px solid rgba(0,163,114,.2);border-radius:8px;padding:12px}
+.si-name{font-family:var(--font-d);font-weight:700;font-size:15px;margin-bottom:4px}
+.si-meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.si-sub{font-family:var(--font-m);font-size:11px;color:var(--green);background:#fff;border-radius:4px;padding:4px 8px;display:inline-block}
+
+/* Route nav list */
+.route-nav{display:flex;flex-direction:column;gap:2px}
+.route-nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:all .15s;border-radius:0}
+.route-nav-item:hover{background:var(--surface2)}
+.route-nav-item.active{background:var(--green-light);border-left:3px solid var(--green)}
+.rni-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.rni-name{font-size:13px;font-weight:500;flex:1;line-height:1.3}
+.rni-count{font-family:var(--font-m);font-size:10px;color:var(--muted)}
+
+/* MAIN */
+main{padding:32px;overflow-y:auto}
+
+/* Page header */
+.page-header{margin-bottom:28px}
+.page-header h1{font-family:var(--font-d);font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:4px}
+.page-header p{color:var(--muted);font-size:14px}
+
+/* KPI strip */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow)}
+.kpi-n{font-family:var(--font-d);font-size:28px;font-weight:800;line-height:1}
+.kpi-l{font-size:12px;color:var(--muted);margin-top:4px}
+.kpi:nth-child(1) .kpi-n{color:var(--green)}
+.kpi:nth-child(2) .kpi-n{color:var(--blue)}
+.kpi:nth-child(3) .kpi-n{color:var(--amber)}
+.kpi:nth-child(4) .kpi-n{color:var(--red)}
+
+/* Route detail */
+.route-panel{display:none}
+.route-panel.active{display:block}
+
+.route-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:16px;box-shadow:var(--shadow)}
+.route-header-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.route-name{font-family:var(--font-d);font-size:20px;font-weight:800;letter-spacing:-.5px}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-family:var(--font-m);font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.b-green{background:var(--green-light);color:var(--green);border:1px solid rgba(0,163,114,.2)}
+.b-amber{background:var(--amber-light);color:var(--amber);border:1px solid rgba(217,119,6,.2)}
+.b-red{background:#fef2f2;color:var(--red);border:1px solid rgba(220,38,38,.2)}
+.b-blue{background:var(--blue-light);color:var(--blue);border:1px solid rgba(37,99,235,.2)}
+.b-gray{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+
+.route-desc{font-size:13px;color:var(--muted);margin-bottom:12px}
+.route-meta{display:flex;gap:16px;flex-wrap:wrap}
+.route-meta-item{font-family:var(--font-m);font-size:11px;color:var(--muted)}
+.route-meta-item strong{color:var(--text)}
+
+/* Two-col grid */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border);font-family:var(--font-d);font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card-body{padding:16px 18px}
+
+/* Stop timeline */
+.stop-timeline{display:flex;flex-direction:column;gap:0}
+.stop-item{display:flex;align-items:stretch;gap:12px}
+.stop-line{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:20px}
+.stop-dot{width:12px;height:12px;border-radius:50%;background:var(--green);border:2px solid #fff;box-shadow:0 0 0 2px var(--green);flex-shrink:0;z-index:1}
+.stop-dot.first{background:#fff;border-color:var(--green)}
+.stop-dot.last{background:var(--text)}
+.stop-connector{flex:1;width:2px;background:var(--dim);margin:2px 0}
+.stop-info{padding:4px 0 16px;flex:1}
+.stop-name{font-weight:500;font-size:13px}
+.stop-addr{font-size:11px;color:var(--muted)}
+.stop-time{font-family:var(--font-m);font-size:11px;color:var(--green);margin-top:2px}
+
+/* Schedule table */
+.schedule-table{width:100%;border-collapse:collapse;font-size:13px}
+.schedule-table thead th{background:var(--surface2);font-family:var(--font-m);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.schedule-table tbody tr{border-bottom:1px solid var(--border)}
+.schedule-table tbody tr:hover{background:var(--surface2)}
+.schedule-table tbody td{padding:8px 12px}
+
+/* Trips */
+.trip-list{display:flex;flex-direction:column;gap:8px}
+.trip-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.trip-date{font-family:var(--font-m);font-size:11px;color:var(--muted);flex-shrink:0;width:80px}
+.trip-times{flex:1}
+.trip-dep{font-size:13px;font-weight:500}
+.trip-arr{font-size:11px;color:var(--muted)}
+
+/* Bus info */
+.bus-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px}
+.bus-brand{font-family:var(--font-d);font-weight:700;font-size:16px;margin-bottom:6px}
+.bus-specs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.bus-spec{font-size:12px;color:var(--muted)}
+.bus-spec strong{color:var(--text);display:block;font-family:var(--font-m);font-size:13px}
+
+/* Fill bar */
+.fill-bar-wrap{margin-top:8px}
+.fill-bar{height:8px;background:var(--dim);border-radius:4px;overflow:hidden;margin-top:4px}
+.fill-bar-fill{height:100%;border-radius:4px;transition:width .8s ease;background:var(--green)}
+.fill-bar-fill.warn{background:var(--amber)}
+.fill-bar-fill.danger{background:var(--red)}
+.fill-label{font-size:11px;color:var(--muted);display:flex;justify-content:space-between}
+
+/* Delayed banner */
+.delayed-banner{background:#fef2f2;border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);display:flex;align-items:center;gap:8px;margin-bottom:12px}
+
+/* Subscription history */
+.hist-table{width:100%;border-collapse:collapse;font-size:12px}
+.hist-table thead th{font-family:var(--font-m);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.hist-table tbody tr{border-bottom:1px solid var(--border)}
+.hist-table tbody td{padding:6px 10px}
+
+/* Loading */
+#loading{position:fixed;inset:0;background:rgba(240,244,248,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px}
+.loader{width:40px;height:40px;border:3px solid var(--dim);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite}
+.loading-text{font-family:var(--font-m);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* empty state */
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-title{font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto}.two-col{grid-template-columns:1fr}.kpi-strip{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="loader"></div>
+  <div class="loading-text">Loading Database…</div>
+</div>
+
+<nav>
+  <a href="index.html" class="nav-logo">UTMS<span>.bus</span></a>
+  <div class="nav-right">
+    <span class="nav-badge">🎓 Student Portal</span>
+    <a href="admin.html" class="nav-link">Admin Panel</a>
+    <a href="report.html" class="nav-link">Report</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <!-- Student lookup -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Look Up Your Account</div>
+      <div class="lookup-box">
+        <input id="email-input" class="lookup-input" type="email" placeholder="your.email@usthb.dz">
+        <button class="btn btn-green" onclick="lookupStudent()">Search</button>
+        <div id="student-info-card">
+          <div class="si-name" id="si-name"></div>
+          <div class="si-meta" id="si-meta"></div>
+          <div id="si-sub"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Route list -->
+    <div class="sidebar-section" style="border-bottom:none;margin-bottom:0">
+      <div class="sidebar-label">Transport Lines</div>
+      <div class="route-nav" id="route-nav"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="main-content">
+    <!-- Overview state -->
+    <div id="overview-panel">
+      <div class="page-header">
+        <h1>Bus Lines Overview</h1>
+        <p>Select a line from the sidebar to view stops, schedules, and live trip status.</p>
+      </div>
+      <div class="kpi-strip" id="kpi-strip"></div>
+
+      <!-- All routes summary cards -->
+      <div id="overview-routes"></div>
+    </div>
+
+    <!-- Route detail panels (generated dynamically) -->
+    <div id="route-panels"></div>
+  </main>
+</div>
+
+<script src="db.js"></script>
+<script>
+let currentRoute = null;
+let studentData  = null;
+
+// ── Colours per route ──
+const routeColors = ['#00a372','#2563eb','#d97706','#7c3aed','#dc2626'];
+
+// ── Boot ──
+initDB().then(() => {
+  document.getElementById('loading').style.display = 'none';
+  renderSidebar();
+  renderOverview();
+  renderRoutePanels();
+}).catch(err => {
+  document.querySelector('.loading-text').textContent = 'Error: ' + err.message;
+});
+
+// ── Sidebar route list ──
+function renderSidebar() {
+  const routes = dbQuery(`SELECT r.route_id, r.route_name, r.status,
+    (SELECT COUNT(*) FROM Subscription WHERE route_id=r.route_id AND status='active') AS subs
+    FROM Route r ORDER BY r.route_id`);
+  const nav = document.getElementById('route-nav');
+  nav.innerHTML = routes.map((r, i) => `
+    <div class="route-nav-item" id="rni-${r.route_id}" onclick="selectRoute(${r.route_id})">
+      <div class="rni-dot" style="background:${routeColors[i]};box-shadow:0 0 0 2px ${routeColors[i]}22"></div>
+      <div class="rni-name">${r.route_name}</div>
+      <div class="rni-count">${r.subs} stu.</div>
+    </div>`).join('');
+}
+
+// ── KPI overview ──
+function renderOverview() {
+  const routes   = dbQuery(`SELECT COUNT(*) c FROM Route WHERE status='active'`)[0].c;
+  const students = dbQuery(`SELECT COUNT(*) c FROM Student WHERE status='active'`)[0].c;
+  const delayed  = dbQuery(`SELECT COUNT(*) c FROM Trip WHERE status='delayed'`)[0].c;
+  const nosub    = dbQuery(`SELECT COUNT(*) c FROM Student st WHERE status='active' AND NOT EXISTS (SELECT 1 FROM Subscription s WHERE s.student_id=st.student_id AND s.status='active')`)[0].c;
+  document.getElementById('kpi-strip').innerHTML = `
+    <div class="kpi"><div class="kpi-n">${routes}</div><div class="kpi-l">Active Routes</div></div>
+    <div class="kpi"><div class="kpi-n">${students}</div><div class="kpi-l">Active Students</div></div>
+    <div class="kpi"><div class="kpi-n">${delayed}</div><div class="kpi-l">Delayed Trips</div></div>
+    <div class="kpi"><div class="kpi-n">${nosub}</div><div class="kpi-l">Without Subscription</div></div>`;
+
+  const routes_full = dbQuery(`SELECT r.*, (SELECT COUNT(*) FROM Subscription WHERE route_id=r.route_id AND status='active') AS subs FROM Route r ORDER BY r.route_id`);
+  document.getElementById('overview-routes').innerHTML = routes_full.map((r, i) => {
+    const bus = dbQuery(`SELECT b.* FROM Bus b JOIN Bus_Assignment ba ON b.bus_id=ba.bus_id WHERE ba.route_id=? AND ba.status='active' LIMIT 1`, [r.route_id])[0];
+    const fill = bus ? Math.round(r.subs / bus.max_capacity * 100) : 0;
+    const fillCls = fill > 90 ? 'danger' : fill > 70 ? 'warn' : '';
+    return `<div class="card" style="margin-bottom:12px;cursor:pointer" onclick="selectRoute(${r.route_id})">
+      <div class="card-head" style="border-left:4px solid ${routeColors[i]}">
+        ${r.route_name}
+        <span class="badge ${r.status==='active'?'b-green':r.status==='suspended'?'b-amber':'b-gray'}" style="margin-left:auto">${r.status}</span>
+      </div>
+      <div class="card-body">
+        <div style="color:var(--muted);font-size:13px;margin-bottom:10px">${r.description||''}</div>
+        ${bus ? `
+        <div class="fill-label"><span>${r.subs} students / ${bus.max_capacity} capacity</span><span style="color:${fill>90?'var(--red)':fill>70?'var(--amber)':'var(--green)'}">${fill}%</span></div>
+        <div class="fill-bar"><div class="fill-bar-fill ${fillCls}" style="width:${Math.min(fill,100)}%"></div></div>` : '<div style="font-size:12px;color:var(--muted)">No bus currently assigned</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Render all route detail panels (hidden until selected) ──
+function renderRoutePanels() {
+  const routes = dbQuery(`SELECT * FROM Route ORDER BY route_id`);
+  const container = document.getElementById('route-panels');
+  container.innerHTML = routes.map((r, idx) => {
+    const stops    = dbQuery(`SELECT s.stop_name, s.address, cr.sequence_order, cr.estimated_passing_time FROM Covers_Route cr JOIN Stop s ON cr.stop_id=s.stop_id WHERE cr.route_id=? ORDER BY cr.sequence_order`, [r.route_id]);
+    const schedules = dbQuery(`SELECT * FROM Schedule WHERE route_id=? ORDER BY CASE day_of_week WHEN 'Monday' THEN 1 WHEN 'Tuesday' THEN 2 WHEN 'Wednesday' THEN 3 WHEN 'Thursday' THEN 4 WHEN 'Friday' THEN 5 WHEN 'Saturday' THEN 6 ELSE 7 END, departure_time`, [r.route_id]);
+    const trips    = dbQuery(`SELECT t.*, sc.departure_time AS planned_dep FROM Trip t JOIN Schedule sc ON t.schedule_id=sc.schedule_id WHERE t.route_id=? ORDER BY t.trip_date DESC LIMIT 10`, [r.route_id]);
+    const bus      = dbQuery(`SELECT b.*, ba.start_date FROM Bus b JOIN Bus_Assignment ba ON b.bus_id=ba.bus_id WHERE ba.route_id=? AND ba.status='active' LIMIT 1`, [r.route_id])[0];
+    const subs     = dbQuery(`SELECT COUNT(*) c FROM Subscription WHERE route_id=? AND status='active'`, [r.route_id])[0].c;
+    const fill     = bus ? Math.round(subs / bus.max_capacity * 100) : 0;
+    const fillCls  = fill > 90 ? 'danger' : fill > 70 ? 'warn' : '';
+    const delayedTrips = trips.filter(t => t.status === 'delayed');
+
+    const stopHtml = stops.map((s, i) => `
+      <div class="stop-item">
+        <div class="stop-line">
+          <div class="stop-dot ${i===0?'first':i===stops.length-1?'last':''}"></div>
+          ${i < stops.length-1 ? '<div class="stop-connector"></div>' : ''}
+        </div>
+        <div class="stop-info">
+          <div class="stop-name">${s.stop_name}</div>
+          <div class="stop-addr">${s.address||''}</div>
+          ${s.estimated_passing_time ? `<div class="stop-time">⏱ ${s.estimated_passing_time}</div>` : ''}
+        </div>
+      </div>`).join('');
+
+    const schedHtml = schedules.length ? schedules.map(sc => `
+      <tr>
+        <td>${sc.day_of_week}</td>
+        <td><strong>${sc.departure_time}</strong></td>
+        <td>${sc.estimated_arrival_time}</td>
+      </tr>`).join('') : '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:16px">No schedules defined</td></tr>';
+
+    const tripHtml = trips.length ? trips.map(t => {
+      const statusBadge = t.status === 'completed' ? 'b-green' : t.status === 'delayed' ? 'b-red' : t.status === 'cancelled' ? 'b-gray' : 'b-blue';
+      const late = t.actual_departure_time && t.planned_dep && t.actual_departure_time > t.planned_dep;
+      return `<div class="trip-item">
+        <div class="trip-date">${t.trip_date}</div>
+        <div class="trip-times">
+          <div class="trip-dep">Dep: ${t.actual_departure_time||t.planned_dep||'—'} ${late?'<span style="color:var(--red);font-size:11px">(+late)</span>':''}</div>
+          <div class="trip-arr">Arr: ${t.actual_arrival_time||'—'}</div>
+        </div>
+        <span class="badge ${statusBadge}">${t.status}</span>
+      </div>`;
+    }).join('') : '<div class="empty" style="padding:24px"><div class="empty-icon">🚌</div><div>No trips recorded yet</div></div>';
+
+    const busHtml = bus ? `
+      <div class="bus-card">
+        <div class="bus-brand">${bus.bus_brand} <span style="font-family:var(--font-m);font-size:12px;color:var(--muted)">#${bus.bus_id}</span></div>
+        <div class="bus-specs">
+          <div class="bus-spec"><strong>${bus.max_capacity}</strong>Max Capacity</div>
+          <div class="bus-spec"><strong>${bus.year_of_service}</strong>Year</div>
+          <div class="bus-spec"><strong>${bus.bus_status}</strong>Status</div>
+          <div class="bus-spec"><strong>${bus.start_date}</strong>Assigned Since</div>
+        </div>
+        <div class="fill-bar-wrap">
+          <div class="fill-label"><span>${subs} students enrolled</span><span>${fill}%</span></div>
+          <div class="fill-bar"><div class="fill-bar-fill ${fillCls}" style="width:${Math.min(fill,100)}%"></div></div>
+        </div>
+      </div>` : `<div class="empty" style="padding:24px"><div class="empty-icon">⚠️</div><div>No bus currently assigned to this route</div></div>`;
+
+    return `
+    <div id="route-panel-${r.route_id}" class="route-panel">
+      <div class="route-header">
+        <div class="route-header-top">
+          <div class="route-name" style="border-left:4px solid ${routeColors[idx]};padding-left:12px">${r.route_name}</div>
+          <span class="badge ${r.status==='active'?'b-green':r.status==='suspended'?'b-amber':'b-gray'}">${r.status}</span>
+        </div>
+        <div class="route-desc">${r.description||''}</div>
+        <div class="route-meta">
+          <div class="route-meta-item">Stops: <strong>${stops.length}</strong></div>
+          <div class="route-meta-item">Schedules: <strong>${schedules.length}</strong></div>
+          <div class="route-meta-item">Enrolled: <strong>${subs} students</strong></div>
+          ${bus ? `<div class="route-meta-item">Bus: <strong>${bus.bus_brand}</strong></div>` : ''}
+        </div>
+      </div>
+
+      ${delayedTrips.length ? `<div class="delayed-banner">⚠️ ${delayedTrips.length} delayed trip(s) on this line recently.</div>` : ''}
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head">📍 Stop Sequence</div>
+          <div class="card-body">
+            <div class="stop-timeline">${stopHtml}</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">🕐 Weekly Schedule</div>
+          <div class="card-body" style="padding:0">
+            <table class="schedule-table">
+              <thead><tr><th>Day</th><th>Departure</th><th>Est. Arrival</th></tr></thead>
+              <tbody>${schedHtml}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head">🚌 Assigned Bus</div>
+          <div class="card-body">${busHtml}</div>
+        </div>
+        <div class="card">
+          <div class="card-head">🚦 Recent Trips</div>
+          <div class="card-body"><div class="trip-list">${tripHtml}</div></div>
+        </div>
+      </div>
+
+      <div id="student-history-${r.route_id}" style="display:none">
+        <div class="card">
+          <div class="card-head">📋 Your Subscription History on This Line</div>
+          <div class="card-body" id="student-history-body-${r.route_id}"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Select route ──
+function selectRoute(routeId) {
+  document.getElementById('overview-panel').style.display = 'none';
+  document.querySelectorAll('.route-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.route-nav-item').forEach(i => i.classList.remove('active'));
+  document.getElementById(`route-panel-${routeId}`).classList.add('active');
+  document.getElementById(`rni-${routeId}`).classList.add('active');
+  currentRoute = routeId;
+
+  if (studentData) showStudentHistoryOnRoute(routeId);
+}
+
+// ── Student lookup ──
+function lookupStudent() {
+  const email = document.getElementById('email-input').value.trim();
+  if (!email) return;
+  const s = dbQuery(`SELECT * FROM Student WHERE email=? AND status='active'`, [email])[0];
+  const card = document.getElementById('student-info-card');
+  if (!s) {
+    card.style.display = 'block';
+    card.style.background = '#fef2f2';
+    card.style.borderColor = 'rgba(220,38,38,.2)';
+    card.innerHTML = '<div style="color:var(--red);font-size:13px">❌ No active student found with that email.</div>';
+    studentData = null;
+    return;
+  }
+  studentData = s;
+  const sub = dbQuery(`SELECT s.*, r.route_name FROM Subscription s JOIN Route r ON s.route_id=r.route_id WHERE s.student_id=? AND s.status='active'`, [s.student_id])[0];
+  card.style.display = 'block';
+  card.style.background = 'var(--green-light)';
+  card.style.borderColor = 'rgba(0,163,114,.2)';
+  document.getElementById('si-name').textContent = `${s.first_name} ${s.last_name}`;
+  document.getElementById('si-meta').textContent = `${s.email} · ${s.address||''}`;
+  const subEl = document.getElementById('si-sub');
+  if (sub) {
+    subEl.innerHTML = `<span class="badge b-green">✓ ${sub.route_name}</span>`;
+    // Auto-navigate to their route
+    selectRoute(sub.route_id);
+  } else {
+    subEl.innerHTML = `<span class="badge b-red">No active subscription</span>`;
+  }
+}
+
+function showStudentHistoryOnRoute(routeId) {
+  if (!studentData) return;
+  const hist = dbQuery(`SELECT s.*, r.route_name FROM Subscription s JOIN Route r ON s.route_id=r.route_id WHERE s.student_id=? ORDER BY s.start_date DESC`, [studentData.student_id]);
+  const wrapper = document.getElementById(`student-history-${routeId}`);
+  const body = document.getElementById(`student-history-body-${routeId}`);
+  if (!hist.length) return;
+  wrapper.style.display = 'block';
+  body.innerHTML = `<table class="hist-table">
+    <thead><tr><th>#</th><th>Route</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+    <tbody>${hist.map(h => `<tr>
+      <td style="color:var(--muted)">${h.subscription_id}</td>
+      <td>${h.route_name}</td>
+      <td>${h.start_date}</td>
+      <td>${h.end_date||'—'}</td>
+      <td><span class="badge ${h.status==='active'?'b-green':h.status==='expired'?'b-amber':'b-red'}">${h.status}</span></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// Enter key on email input
+document.getElementById('email-input').addEventListener('keydown', e => { if (e.key === 'Enter') lookupStudent(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UTMS — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090f;--surface:#0e1420;--surface2:#141d2e;--surface3:#1a2540;
+  --border:#1e2d45;--border2:#243050;
+  --green:#00e5a0;--green-d:#00a372;
+  --blue:#4f9eff;--amber:#ffb830;--red:#ff4f6b;--purple:#a78bfa;
+  --text:#e8edf5;--muted:#6b7a96;--dim:#2a3550;
+  --font-d:'Syne',sans-serif;--font-m:'Space Mono',monospace;--font-b:'DM Sans',sans-serif;
+  --radius:8px;--glow:0 0 20px rgba(0,229,160,.12);
+}
+*{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:14px;min-height:100vh;display:flex;flex-direction:column}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;height:56px;flex-shrink:0;position:sticky;top:0;z-index:200}
+.nav-logo{font-family:var(--font-d);font-weight:800;font-size:18px;color:var(--green);letter-spacing:-1px;text-decoration:none}
+.nav-logo span{color:var(--muted)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.nav-badge{font-family:var(--font-m);font-size:10px;padding:4px 10px;border-radius:20px;background:rgba(255,79,107,.1);color:var(--red);border:1px solid rgba(255,79,107,.25);letter-spacing:.05em}
+.nav-link{padding:7px 14px;border-radius:6px;font-family:var(--font-m);font-size:10px;text-transform:uppercase;letter-spacing:.08em;text-decoration:none;color:var(--muted);border:1px solid var(--border);transition:all .15s}
+.nav-link:hover{border-color:var(--green);color:var(--green)}
+
+/* SHELL */
+.shell{display:flex;flex:1;overflow:hidden;height:calc(100vh - 56px)}
+
+/* SIDEBAR */
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar-section{padding:16px 12px 8px}
+.sidebar-label{font-family:var(--font-m);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;padding-left:8px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;cursor:pointer;transition:all .15s;font-size:13px;color:var(--muted);border:1px solid transparent;margin-bottom:2px;user-select:none}
+.sidebar-item:hover{background:var(--surface2);color:var(--text);border-color:var(--border)}
+.sidebar-item.active{background:var(--surface3);color:var(--green);border-color:rgba(0,229,160,.2)}
+.sidebar-item .si-icon{font-size:15px;flex-shrink:0;width:20px;text-align:center}
+.sidebar-item .si-count{margin-left:auto;font-family:var(--font-m);font-size:10px;color:var(--dim)}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px}
+
+/* Section header */
+.section-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.section-title{font-family:var(--font-d);font-size:22px;font-weight:800;letter-spacing:-.5px}
+.section-desc{color:var(--muted);font-size:13px;flex:1;min-width:200px}
+.btn{padding:9px 18px;border:none;border-radius:6px;font-family:var(--font-m);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
+.btn-green{background:var(--green);color:#000}
+.btn-green:hover{background:#00c48a}
+.btn-red{background:rgba(255,79,107,.15);color:var(--red);border:1px solid rgba(255,79,107,.3)}
+.btn-red:hover{background:rgba(255,79,107,.25)}
+.btn-blue{background:rgba(79,158,255,.15);color:var(--blue);border:1px solid rgba(79,158,255,.3)}
+.btn-blue:hover{background:rgba(79,158,255,.25)}
+.btn-amber{background:rgba(255,184,48,.12);color:var(--amber);border:1px solid rgba(255,184,48,.25)}
+.btn-amber:hover{background:rgba(255,184,48,.2)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--green);color:var(--green)}
+.btn-sm{padding:5px 11px;font-size:10px}
+
+/* KPI bar */
+.kpi-bar{display:flex;gap:10px;flex-wrap:wrap}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;min-width:110px}
+.kpi-n{font-family:var(--font-d);font-size:26px;font-weight:800;line-height:1}
+.kpi-l{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--font-m);letter-spacing:.05em}
+
+/* Table */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.tbl-toolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tbl-search{flex:1;min-width:180px;padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-b);font-size:13px;outline:none;transition:border .15s}
+.tbl-search:focus{border-color:var(--green)}
+.tbl-search::placeholder{color:var(--muted)}
+.tbl-scroll{overflow-x:auto;max-height:460px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead{position:sticky;top:0;z-index:10}
+thead th{background:var(--surface2);font-family:var(--font-m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:hover{background:var(--surface2)}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:9px 14px;vertical-align:middle;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.td-actions{display:flex;gap:6px;white-space:nowrap}
+
+/* Badge */
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--font-m);font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.b-green{background:rgba(0,229,160,.12);color:var(--green);border:1px solid rgba(0,229,160,.25)}
+.b-blue{background:rgba(79,158,255,.12);color:var(--blue);border:1px solid rgba(79,158,255,.25)}
+.b-amber{background:rgba(255,184,48,.12);color:var(--amber);border:1px solid rgba(255,184,48,.25)}
+.b-red{background:rgba(255,79,107,.12);color:var(--red);border:1px solid rgba(255,79,107,.25)}
+.b-gray{background:rgba(107,122,150,.12);color:var(--muted);border:1px solid var(--border)}
+.b-purple{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.25)}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:999;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:520px;max-width:95vw;max-height:88vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+.modal-head{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:5}
+.modal-title{font-family:var(--font-d);font-size:18px;font-weight:800;letter-spacing:-.5px}
+.modal-close{background:transparent;border:1px solid var(--border);color:var(--muted);width:30px;height:30px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.modal-close:hover{border-color:var(--red);color:var(--red)}
+.modal-body{padding:20px 24px}
+.modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--surface)}
+
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-full{grid-column:1/-1}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-family:var(--font-m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.form-input,.form-select,.form-textarea{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-b);font-size:13px;padding:9px 12px;outline:none;transition:border .15s;width:100%}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--green)}
+.form-textarea{resize:vertical;min-height:70px}
+.form-select option{background:var(--surface2)}
+
+/* Toast */
+.toast-wrap{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:9999}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.3);animation:toastIn .3s ease;max-width:340px}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--blue)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* Views panel */
+.views-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.view-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+.view-card-head{padding:12px 16px;border-bottom:1px solid var(--border);font-family:var(--font-m);font-size:11px;color:var(--blue);display:flex;align-items:center;justify-content:space-between}
+.view-card-body{overflow-x:auto;max-height:280px;overflow-y:auto}
+
+/* Loading */
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px}
+.loader{width:36px;height:36px;border:3px solid var(--dim);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Section panels */
+.panel{display:none}
+.panel.active{display:flex;flex-direction:column;gap:16px;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* Route stop items */
+.rs-stop-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;transition:all .15s;cursor:grab;user-select:none}
+.rs-stop-item:active{cursor:grabbing}
+.rs-stop-item.dragging{opacity:.4;border-style:dashed}
+.rs-stop-item.drag-over{border-color:var(--green);background:rgba(0,229,160,.06)}
+.rs-stop-seq{font-family:var(--font-m);font-size:11px;color:var(--green);background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.2);border-radius:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700}
+.rs-stop-info{flex:1}
+.rs-stop-name{font-size:13px;font-weight:500}
+.rs-stop-addr{font-size:11px;color:var(--muted)}
+.rs-stop-time{font-family:var(--font-m);font-size:11px;color:var(--amber);flex-shrink:0}
+.rs-stop-del{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:4px;width:24px;height:24px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.rs-stop-del:hover{border-color:var(--red);color:var(--red)}
+
+.rs-avail-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;transition:all .15s}
+.rs-avail-item.already-added{opacity:.4;pointer-events:none}
+.rs-avail-item .rs-add-btn{margin-left:auto;background:rgba(79,158,255,.12);border:1px solid rgba(79,158,255,.25);color:var(--blue);border-radius:4px;padding:4px 10px;font-family:var(--font-m);font-size:10px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.rs-avail-item .rs-add-btn:hover{background:rgba(79,158,255,.22)}
+
+/* Confirm dialog */
+.confirm-msg{color:var(--muted);font-size:14px;line-height:1.6;margin:4px 0 8px}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="loader"></div>
+  <div style="font-family:var(--font-m);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Initializing Database…</div>
+</div>
+
+<nav>
+  <a href="index.html" class="nav-logo">UTMS<span>.db</span></a>
+  <div class="nav-right">
+    <span class="nav-badge">⚙️ Admin Panel</span>
+    <a href="student.html" class="nav-link">Student View</a>
+    <a href="report.html" class="nav-link">Report</a>
+  </div>
+</nav>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Dashboard</div>
+      <div class="sidebar-item active" onclick="showPanel('dashboard',this)"><span class="si-icon">📊</span>Dashboard</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Manage</div>
+      <div class="sidebar-item" onclick="showPanel('students',this)"><span class="si-icon">👤</span>Students<span class="si-count" id="cnt-students">—</span></div>
+      <div class="sidebar-item" onclick="showPanel('routes',this)"><span class="si-icon">🗺</span>Routes<span class="si-count" id="cnt-routes">—</span></div>
+      <div class="sidebar-item" onclick="showPanel('stops',this)"><span class="si-icon">📍</span>Stops<span class="si-count" id="cnt-stops">—</span></div>
+      <div class="sidebar-item" onclick="showPanel('routestops',this)"><span class="si-icon">🛤</span>Route Stops</div>
+      <div class="sidebar-item" onclick="showPanel('buses',this)"><span class="si-icon">🚌</span>Buses<span class="si-count" id="cnt-buses">—</span></div>
+      <div class="sidebar-item" onclick="showPanel('assignments',this)"><span class="si-icon">🔗</span>Bus Assignments<span class="si-count" id="cnt-assignments">—</span></div>
+      <div class="sidebar-item" onclick="showPanel('subscriptions',this)"><span class="si-icon">📋</span>Subscriptions<span class="si-count" id="cnt-subscriptions">—</span></div>
+      <div class="sidebar-item" onclick="showPanel('schedules',this)"><span class="si-icon">📅</span>Schedules<span class="si-count" id="cnt-schedules">—</span></div>
+      <div class="sidebar-item" onclick="showPanel('trips',this)"><span class="si-icon">🚦</span>Trips<span class="si-count" id="cnt-trips">—</span></div>
+      <div class="sidebar-item" onclick="showPanel('incidents',this)"><span class="si-icon">⚠️</span>Incidents<span class="si-count" id="cnt-incidents">—</span></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Reporting</div>
+      <div class="sidebar-item" onclick="showPanel('views',this)"><span class="si-icon">📈</span>Views & Queries</div>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content" id="content">
+
+    <!-- DASHBOARD -->
+    <div id="panel-dashboard" class="panel active">
+      <div class="section-head">
+        <div class="section-title">Admin Dashboard</div>
+        <div class="section-desc">Overview of the entire UTMS database.</div>
+        <button class="btn btn-ghost" onclick="refreshAll()">↺ Refresh</button>
+      </div>
+      <div class="kpi-bar" id="dash-kpis"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="tbl-wrap">
+          <div class="tbl-toolbar" style="font-family:var(--font-m);font-size:11px;color:var(--green)">Students Per Route (Q1)</div>
+          <div class="tbl-scroll" id="dash-spr"></div>
+        </div>
+        <div class="tbl-wrap">
+          <div class="tbl-toolbar" style="font-family:var(--font-m);font-size:11px;color:var(--red)">Delayed Trips (Q8)</div>
+          <div class="tbl-scroll" id="dash-delayed"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="tbl-wrap">
+          <div class="tbl-toolbar" style="font-family:var(--font-m);font-size:11px;color:var(--amber)">Bus Fill Rate (Q2)</div>
+          <div class="tbl-scroll" id="dash-fillrate"></div>
+        </div>
+        <div class="tbl-wrap">
+          <div class="tbl-toolbar" style="font-family:var(--font-m);font-size:11px;color:var(--muted)">Students Without Subscription (Q4)</div>
+          <div class="tbl-scroll" id="dash-nosub"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STUDENTS -->
+    <div id="panel-students" class="panel">
+      <div class="section-head">
+        <div class="section-title">Students</div>
+        <div class="section-desc">Register, edit, and manage student profiles and subscriptions.</div>
+        <button class="btn btn-green" onclick="openModal('student')">+ Add Student</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar">
+          <input class="tbl-search" placeholder="Search by name or email…" oninput="filterTable('tbl-students',this.value)">
+        </div>
+        <div class="tbl-scroll"><table id="tbl-students"></table></div>
+      </div>
+    </div>
+
+    <!-- ROUTES -->
+    <div id="panel-routes" class="panel">
+      <div class="section-head">
+        <div class="section-title">Routes</div>
+        <div class="section-desc">Define transport lines with descriptions and statuses.</div>
+        <button class="btn btn-green" onclick="openModal('route')">+ Add Route</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><input class="tbl-search" placeholder="Search routes…" oninput="filterTable('tbl-routes',this.value)"></div>
+        <div class="tbl-scroll"><table id="tbl-routes"></table></div>
+      </div>
+    </div>
+
+    <!-- ROUTE STOPS -->
+    <div id="panel-routestops" class="panel">
+      <div class="section-head">
+        <div class="section-title">Route Stops</div>
+        <div class="section-desc">Assign stops to routes, set sequence order and estimated passing times.</div>
+      </div>
+      <!-- Route selector -->
+      <div class="tbl-wrap" style="padding:16px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <label style="font-family:var(--font-m);font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase">Select Route</label>
+        <select class="form-select" id="rs-route-select" style="max-width:360px" onchange="loadRouteStops(this.value)"></select>
+        <span id="rs-stop-count" style="font-family:var(--font-m);font-size:11px;color:var(--muted)"></span>
+      </div>
+
+      <div id="rs-body" style="display:none;display:flex;flex-direction:column;gap:16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+
+          <!-- Current stops on this route -->
+          <div class="tbl-wrap">
+            <div class="tbl-toolbar" style="justify-content:space-between">
+              <span style="font-family:var(--font-m);font-size:11px;color:var(--green)">Stops on this Route</span>
+              <span style="font-family:var(--font-m);font-size:10px;color:var(--muted)">Drag to reorder</span>
+            </div>
+            <div id="rs-current-list" style="min-height:120px;padding:8px"></div>
+            <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px">
+              <button class="btn btn-green btn-sm" onclick="saveRouteStopOrder()">💾 Save Order</button>
+            </div>
+          </div>
+
+          <!-- Available stops to add -->
+          <div class="tbl-wrap">
+            <div class="tbl-toolbar" style="justify-content:space-between">
+              <span style="font-family:var(--font-m);font-size:11px;color:var(--blue)">Available Stops</span>
+              <input class="tbl-search" style="max-width:160px;padding:5px 10px;font-size:12px" placeholder="Filter…" oninput="filterAvailableStops(this.value)">
+            </div>
+            <div id="rs-available-list" style="min-height:120px;padding:8px"></div>
+            <div style="padding:10px 14px;border-top:1px solid var(--border)">
+              <button class="btn btn-ghost btn-sm" onclick="openModal('stop')" style="width:100%">+ Create New Stop</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add stop form (inline) -->
+        <div class="tbl-wrap" style="padding:16px 20px">
+          <div style="font-family:var(--font-m);font-size:11px;color:var(--amber);margin-bottom:12px;letter-spacing:.08em;text-transform:uppercase">Quick-add Stop to Route</div>
+          <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:end">
+            <div>
+              <div class="form-label" style="margin-bottom:5px">Stop</div>
+              <select class="form-select" id="rs-add-stop-id"></select>
+            </div>
+            <div>
+              <div class="form-label" style="margin-bottom:5px">Sequence #</div>
+              <input class="form-input" id="rs-add-seq" type="number" min="1" value="1" style="width:80px">
+            </div>
+            <div>
+              <div class="form-label" style="margin-bottom:5px">Passing Time</div>
+              <input class="form-input" id="rs-add-time" type="time" style="width:120px">
+            </div>
+            <button class="btn btn-green" onclick="addStopToRoute()">Add Stop</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="rs-placeholder" style="text-align:center;padding:60px;color:var(--muted)">
+        <div style="font-size:40px;margin-bottom:12px">🛤</div>
+        <div style="font-family:var(--font-d);font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px">Select a Route</div>
+        <div style="font-size:13px">Choose a route above to manage its stops</div>
+      </div>
+    </div>
+
+    <!-- STOPS -->
+    <div id="panel-stops" class="panel">
+      <div class="section-head">
+        <div class="section-title">Stops</div>
+        <div class="section-desc">Manage bus stop locations. Link stops to routes via the Covers_Route junction.</div>
+        <button class="btn btn-green" onclick="openModal('stop')">+ Add Stop</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><input class="tbl-search" placeholder="Search stops…" oninput="filterTable('tbl-stops',this.value)"></div>
+        <div class="tbl-scroll"><table id="tbl-stops"></table></div>
+      </div>
+    </div>
+
+    <!-- BUSES -->
+    <div id="panel-buses" class="panel">
+      <div class="section-head">
+        <div class="section-title">Buses</div>
+        <div class="section-desc">Fleet management — capacity, brand, year, and status.</div>
+        <button class="btn btn-green" onclick="openModal('bus')">+ Add Bus</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><input class="tbl-search" placeholder="Search buses…" oninput="filterTable('tbl-buses',this.value)"></div>
+        <div class="tbl-scroll"><table id="tbl-buses"></table></div>
+      </div>
+    </div>
+
+    <!-- ASSIGNMENTS -->
+    <div id="panel-assignments" class="panel">
+      <div class="section-head">
+        <div class="section-title">Bus Assignments</div>
+        <div class="section-desc">Assign buses to routes for specific time periods. All assignments are historized.</div>
+        <button class="btn btn-green" onclick="openModal('assignment')">+ New Assignment</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><input class="tbl-search" placeholder="Search assignments…" oninput="filterTable('tbl-assignments',this.value)"></div>
+        <div class="tbl-scroll"><table id="tbl-assignments"></table></div>
+      </div>
+    </div>
+
+    <!-- SUBSCRIPTIONS -->
+    <div id="panel-subscriptions" class="panel">
+      <div class="section-head">
+        <div class="section-title">Subscriptions</div>
+        <div class="section-desc">Student-to-route subscriptions. History is preserved. Only one active per student (enforced).</div>
+        <button class="btn btn-green" onclick="openModal('subscription')">+ Subscribe Student</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><input class="tbl-search" placeholder="Search subscriptions…" oninput="filterTable('tbl-subscriptions',this.value)"></div>
+        <div class="tbl-scroll"><table id="tbl-subscriptions"></table></div>
+      </div>
+    </div>
+
+    <!-- SCHEDULES -->
+    <div id="panel-schedules" class="panel">
+      <div class="section-head">
+        <div class="section-title">Schedules</div>
+        <div class="section-desc">Define weekly timetables per route and day of week.</div>
+        <button class="btn btn-green" onclick="openModal('schedule')">+ Add Schedule</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><input class="tbl-search" placeholder="Search schedules…" oninput="filterTable('tbl-schedules',this.value)"></div>
+        <div class="tbl-scroll"><table id="tbl-schedules"></table></div>
+      </div>
+    </div>
+
+    <!-- TRIPS -->
+    <div id="panel-trips" class="panel">
+      <div class="section-head">
+        <div class="section-title">Trips</div>
+        <div class="section-desc">Real-world instances of scheduled runs. Record actual departure/arrival times.</div>
+        <button class="btn btn-green" onclick="openModal('trip')">+ Record Trip</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><input class="tbl-search" placeholder="Search trips…" oninput="filterTable('tbl-trips',this.value)"></div>
+        <div class="tbl-scroll"><table id="tbl-trips"></table></div>
+      </div>
+    </div>
+
+    <!-- INCIDENTS -->
+    <div id="panel-incidents" class="panel">
+      <div class="section-head">
+        <div class="section-title">Incidents</div>
+        <div class="section-desc">Log breakdowns, accidents, delays linked to specific trips.</div>
+        <button class="btn btn-green" onclick="openModal('incident')">+ Log Incident</button>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar"><input class="tbl-search" placeholder="Search incidents…" oninput="filterTable('tbl-incidents',this.value)"></div>
+        <div class="tbl-scroll"><table id="tbl-incidents"></table></div>
+      </div>
+    </div>
+
+    <!-- VIEWS -->
+    <div id="panel-views" class="panel">
+      <div class="section-head">
+        <div class="section-title">Views & Queries</div>
+        <div class="section-desc">Live database views implementing all 8 functional queries from the project.</div>
+      </div>
+      <div class="views-grid" id="views-grid"></div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /shell -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Modal</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-green" id="modal-submit" onclick="submitModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-overlay">
+  <div class="modal" style="width:400px">
+    <div class="modal-head">
+      <div class="modal-title" id="confirm-title">Confirm Delete</div>
+      <button class="modal-close" onclick="closeConfirm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-msg" id="confirm-msg"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-red" id="confirm-ok">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="db.js"></script>
+<script>
+// ────────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────────
+let currentModal = null;
+let editingId    = null;
+
+// ────────────────────────────────────────────────
+// BOOT
+// ────────────────────────────────────────────────
+initDB().then(() => {
+  document.getElementById('loading').style.display = 'none';
+  refreshAll();
+}).catch(err => {
+  document.querySelector('#loading div:last-child').textContent = 'Error: ' + err.message;
+});
+
+function refreshAll() {
+  updateCounts();
+  renderDashboard();
+  renderStudents();
+  renderRoutes();
+  renderStops();
+  renderBuses();
+  renderAssignments();
+  renderSubscriptions();
+  renderSchedules();
+  renderTrips();
+  renderIncidents();
+  renderViews();
+}
+
+// ────────────────────────────────────────────────
+// SIDEBAR PANEL SWITCHER
+// ────────────────────────────────────────────────
+function showPanel(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ────────────────────────────────────────────────
+// COUNTS
+// ────────────────────────────────────────────────
+function updateCounts() {
+  const tables = {students:'Student',routes:'Route',stops:'Stop',buses:'Bus',assignments:'Bus_Assignment',subscriptions:'Subscription',schedules:'Schedule',trips:'Trip',incidents:'Incident'};
+  Object.entries(tables).forEach(([k,t]) => {
+    const cnt = dbQuery(`SELECT COUNT(*) c FROM ${t}`)[0].c;
+    const el = document.getElementById('cnt-' + k);
+    if (el) el.textContent = cnt;
+  });
+}
+
+// ────────────────────────────────────────────────
+// DASHBOARD
+// ────────────────────────────────────────────────
+function renderDashboard() {
+  const s  = dbQuery(`SELECT COUNT(*) c FROM Student WHERE status='active'`)[0].c;
+  const r  = dbQuery(`SELECT COUNT(*) c FROM Route WHERE status='active'`)[0].c;
+  const b  = dbQuery(`SELECT COUNT(*) c FROM Bus WHERE bus_status IN ('available','in_service')`)[0].c;
+  const d  = dbQuery(`SELECT COUNT(*) c FROM Trip WHERE status='delayed'`)[0].c;
+  const i  = dbQuery(`SELECT COUNT(*) c FROM Incident WHERE status='open'`)[0].c;
+  const ns = dbQuery(`SELECT COUNT(*) c FROM Student st WHERE status='active' AND NOT EXISTS (SELECT 1 FROM Subscription s WHERE s.student_id=st.student_id AND s.status='active')`)[0].c;
+
+  document.getElementById('dash-kpis').innerHTML = [
+    {n:s,l:'Active Students',color:'var(--green)'},
+    {n:r,l:'Active Routes',color:'var(--blue)'},
+    {n:b,l:'Operational Buses',color:'var(--amber)'},
+    {n:d,l:'Delayed Trips',color:'var(--red)'},
+    {n:i,l:'Open Incidents',color:'var(--red)'},
+    {n:ns,l:'No Subscription',color:'var(--muted)'},
+  ].map(k=>`<div class="kpi"><div class="kpi-n" style="color:${k.color}">${k.n}</div><div class="kpi-l">${k.l}</div></div>`).join('');
+
+  // Q1
+  const spr = dbQuery(`SELECT r.route_name, COUNT(s.student_id) nb FROM Route r LEFT JOIN Subscription s ON r.route_id=s.route_id AND s.status='active' GROUP BY r.route_id ORDER BY nb DESC`);
+  document.getElementById('dash-spr').innerHTML = buildTable(spr, ['route_name','nb'], ['Route','Students']);
+
+  // Q8
+  const delayed = dbQuery(`SELECT t.trip_id, t.trip_date, r.route_name, b.bus_brand, sc.departure_time planned, t.actual_departure_time actual FROM Trip t JOIN Schedule sc ON t.schedule_id=sc.schedule_id JOIN Route r ON t.route_id=r.route_id JOIN Bus b ON t.bus_id=b.bus_id WHERE t.status='delayed' OR (t.actual_departure_time IS NOT NULL AND t.actual_departure_time>sc.departure_time) ORDER BY t.trip_date DESC`);
+  document.getElementById('dash-delayed').innerHTML = delayed.length ? buildTable(delayed, ['trip_id','trip_date','route_name','bus_brand','planned','actual'], ['#','Date','Route','Bus','Planned','Actual'])
+    : '<div style="padding:24px;text-align:center;color:var(--muted)">✓ No delayed trips</div>';
+
+  // Q2
+  const fr = dbQuery(`SELECT t.trip_id, t.trip_date, r.route_name, b.bus_brand, b.max_capacity, (SELECT COUNT(*) FROM Subscription sub WHERE sub.route_id=t.route_id AND sub.status='active') AS enrolled FROM Trip t JOIN Bus b ON t.bus_id=b.bus_id JOIN Route r ON t.route_id=r.route_id ORDER BY t.trip_date DESC LIMIT 20`);
+  document.getElementById('dash-fillrate').innerHTML = buildTable(
+    fr.map(row=>({...row, fill_pct: row.max_capacity ? Math.round(row.enrolled/row.max_capacity*100)+'%' : '—'})),
+    ['trip_date','route_name','bus_brand','enrolled','max_capacity','fill_pct'],['Date','Route','Bus','Enrolled','Capacity','Fill%']);
+
+  // Q4
+  const nosub = dbQuery(`SELECT st.student_id, st.last_name, st.first_name, st.email FROM Student st WHERE st.status='active' AND NOT EXISTS (SELECT 1 FROM Subscription s WHERE s.student_id=st.student_id AND s.status='active')`);
+  document.getElementById('dash-nosub').innerHTML = nosub.length
+    ? buildTable(nosub, ['student_id','last_name','first_name','email'], ['#','Last','First','Email'])
+    : '<div style="padding:24px;text-align:center;color:var(--muted)">✓ All active students have subscriptions</div>';
+}
+
+// ────────────────────────────────────────────────
+// BUILD TABLE HELPER
+// ────────────────────────────────────────────────
+function buildTable(rows, cols, headers, actions) {
+  if (!rows.length) return '<div style="padding:24px;text-align:center;color:var(--muted)">No records found.</div>';
+  const thHtml = [...headers, ...(actions?['Actions']:[])].map(h=>`<th>${h}</th>`).join('');
+  const bodyHtml = rows.map(row => {
+    const tds = cols.map(c => {
+      const v = row[c];
+      if (c === 'status' || c === 'bus_status') return `<td>${statusBadge(v)}</td>`;
+      return `<td title="${v??''}">${v??'—'}</td>`;
+    }).join('');
+    const actTd = actions ? `<td><div class="td-actions">${actions(row)}</div></td>` : '';
+    return `<tr>${tds}${actTd}</tr>`;
+  }).join('');
+  return `<table><thead><tr>${thHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
+}
+
+function statusBadge(v) {
+  const map={active:'b-green',available:'b-green',in_service:'b-blue',operational:'b-blue',completed:'b-green',scheduled:'b-blue',in_progress:'b-blue',delayed:'b-red',cancelled:'b-red',maintenance:'b-amber',out_of_service:'b-gray',ended:'b-gray',expired:'b-gray',resolved:'b-purple',closed:'b-gray',open:'b-red',suspended:'b-amber',inactive:'b-gray'};
+  return `<span class="badge ${map[v]||'b-gray'}">${v||'—'}</span>`;
+}
+
+// ────────────────────────────────────────────────
+// RENDER EACH TABLE
+// ────────────────────────────────────────────────
+function renderStudents() {
+  const rows = dbQuery(`SELECT st.*, (SELECT r.route_name FROM Subscription sub JOIN Route r ON sub.route_id=r.route_id WHERE sub.student_id=st.student_id AND sub.status='active' LIMIT 1) AS current_route FROM Student st ORDER BY st.student_id`);
+  document.getElementById('tbl-students').outerHTML = buildTable(rows,
+    ['student_id','last_name','first_name','email','phone_num','address','status','current_route'],
+    ['#','Last','First','Email','Phone','Address','Status','Route'],
+    row => `<button class="btn btn-amber btn-sm" onclick="openModal('student',${row.student_id})">Edit</button>
+            <button class="btn btn-red btn-sm" onclick="confirmDelete('Student','student_id',${row.student_id},'${row.first_name} ${row.last_name}')">Del</button>`
+  ).replace('id=""', `id="tbl-students"`);
+  // fix id on new table
+  setTimeout(()=>{ const t=document.querySelector('#panel-students table'); if(t)t.id='tbl-students'; },0);
+}
+
+function renderRoutes() {
+  const rows = dbQuery(`SELECT r.*, (SELECT COUNT(*) FROM Subscription WHERE route_id=r.route_id AND status='active') subs, (SELECT COUNT(*) FROM Covers_Route WHERE route_id=r.route_id) stop_count FROM Route r ORDER BY r.route_id`);
+  replaceTable('routes', buildTable(rows,
+    ['route_id','route_name','description','status','stop_count','subs'],
+    ['#','Name','Description','Status','Stops','Subscribers'],
+    row=>`<button class="btn btn-blue btn-sm" onclick="openRouteStops(${row.route_id})">🛤 Stops</button>
+          <button class="btn btn-amber btn-sm" onclick="openModal('route',${row.route_id})">Edit</button>
+          <button class="btn btn-red btn-sm" onclick="confirmDelete('Route','route_id',${row.route_id},'${row.route_name}')">Del</button>`));
+}
+
+function renderStops() {
+  const rows = dbQuery(`SELECT s.*, GROUP_CONCAT(r.route_name, ', ') routes FROM Stop s LEFT JOIN Covers_Route cr ON cr.stop_id=s.stop_id LEFT JOIN Route r ON r.route_id=cr.route_id GROUP BY s.stop_id ORDER BY s.stop_id`);
+  replaceTable('stops', buildTable(rows,
+    ['stop_id','stop_name','address','routes'],['#','Name','Address','Used In Routes'],
+    row=>`<button class="btn btn-amber btn-sm" onclick="openModal('stop',${row.stop_id})">Edit</button>
+          <button class="btn btn-red btn-sm" onclick="confirmDelete('Stop','stop_id',${row.stop_id},'${row.stop_name}')">Del</button>`));
+}
+
+function renderBuses() {
+  const rows = dbQuery(`SELECT b.*, (SELECT r.route_name FROM Bus_Assignment ba JOIN Route r ON ba.route_id=r.route_id WHERE ba.bus_id=b.bus_id AND ba.status='active' LIMIT 1) AS current_route FROM Bus b ORDER BY b.bus_id`);
+  replaceTable('buses', buildTable(rows,
+    ['bus_id','bus_brand','max_capacity','year_of_service','bus_status','current_route'],
+    ['#','Brand','Capacity','Year','Status','Assigned To'],
+    row=>`<button class="btn btn-amber btn-sm" onclick="openModal('bus',${row.bus_id})">Edit</button>
+          <button class="btn btn-red btn-sm" onclick="confirmDelete('Bus','bus_id',${row.bus_id},'Bus #${row.bus_id}')">Del</button>`));
+}
+
+function renderAssignments() {
+  const rows = dbQuery(`SELECT ba.*, b.bus_brand, r.route_name FROM Bus_Assignment ba JOIN Bus b ON ba.bus_id=b.bus_id JOIN Route r ON ba.route_id=r.route_id ORDER BY ba.assignment_id DESC`);
+  replaceTable('assignments', buildTable(rows,
+    ['assignment_id','bus_brand','route_name','start_date','end_date','status'],
+    ['#','Bus','Route','Start','End','Status'],
+    row=>`<button class="btn btn-amber btn-sm" onclick="openModal('assignment',${row.assignment_id})">Edit</button>
+          <button class="btn btn-red btn-sm" onclick="confirmDelete('Bus_Assignment','assignment_id',${row.assignment_id},'Assignment #${row.assignment_id}')">Del</button>`));
+}
+
+function renderSubscriptions() {
+  const rows = dbQuery(`SELECT s.*, st.last_name||' '||st.first_name AS student_name, r.route_name FROM Subscription s JOIN Student st ON s.student_id=st.student_id JOIN Route r ON s.route_id=r.route_id ORDER BY s.subscription_id DESC`);
+  replaceTable('subscriptions', buildTable(rows,
+    ['subscription_id','student_name','route_name','start_date','end_date','status'],
+    ['#','Student','Route','Start','End','Status'],
+    row=>`<button class="btn btn-amber btn-sm" onclick="openModal('subscription',${row.subscription_id})">Edit</button>
+          <button class="btn btn-red btn-sm" onclick="confirmDelete('Subscription','subscription_id',${row.subscription_id},'Subscription #${row.subscription_id}')">Del</button>`));
+}
+
+function renderSchedules() {
+  const rows = dbQuery(`SELECT sc.*, r.route_name FROM Schedule sc JOIN Route r ON sc.route_id=r.route_id ORDER BY r.route_id, CASE sc.day_of_week WHEN 'Monday' THEN 1 WHEN 'Tuesday' THEN 2 WHEN 'Wednesday' THEN 3 WHEN 'Thursday' THEN 4 WHEN 'Friday' THEN 5 WHEN 'Saturday' THEN 6 ELSE 7 END`);
+  replaceTable('schedules', buildTable(rows,
+    ['schedule_id','route_name','day_of_week','departure_time','estimated_arrival_time'],
+    ['#','Route','Day','Departure','Est. Arrival'],
+    row=>`<button class="btn btn-amber btn-sm" onclick="openModal('schedule',${row.schedule_id})">Edit</button>
+          <button class="btn btn-red btn-sm" onclick="confirmDelete('Schedule','schedule_id',${row.schedule_id},'Schedule #${row.schedule_id}')">Del</button>`));
+}
+
+function renderTrips() {
+  const rows = dbQuery(`SELECT t.*, r.route_name, b.bus_brand FROM Trip t JOIN Route r ON t.route_id=r.route_id JOIN Bus b ON t.bus_id=b.bus_id ORDER BY t.trip_date DESC, t.trip_id DESC LIMIT 100`);
+  replaceTable('trips', buildTable(rows,
+    ['trip_id','trip_date','route_name','bus_brand','actual_departure_time','actual_arrival_time','status'],
+    ['#','Date','Route','Bus','Departure','Arrival','Status'],
+    row=>`<button class="btn btn-amber btn-sm" onclick="openModal('trip',${row.trip_id})">Edit</button>
+          <button class="btn btn-red btn-sm" onclick="confirmDelete('Trip','trip_id',${row.trip_id},'Trip #${row.trip_id}')">Del</button>`));
+}
+
+function renderIncidents() {
+  const rows = dbQuery(`SELECT i.*, t.trip_date, r.route_name FROM Incident i JOIN Trip t ON i.trip_id=t.trip_id JOIN Route r ON t.route_id=r.route_id ORDER BY i.incident_id DESC`);
+  replaceTable('incidents', buildTable(rows,
+    ['incident_id','trip_date','route_name','incident_type','description','date_incident','incident_time','status'],
+    ['#','Trip Date','Route','Type','Description','Date','Time','Status'],
+    row=>`<button class="btn btn-amber btn-sm" onclick="openModal('incident',${row.incident_id})">Edit</button>
+          <button class="btn btn-red btn-sm" onclick="confirmDelete('Incident','incident_id',${row.incident_id},'Incident #${row.incident_id}')">Del</button>`));
+}
+
+function renderViews() {
+  const views = [
+    {title:'Q1 — Students Per Route', color:'var(--green)', q:`SELECT r.route_id, r.route_name, COUNT(s.student_id) AS nb_students FROM Route r LEFT JOIN Subscription s ON r.route_id=s.route_id AND s.status='active' GROUP BY r.route_id ORDER BY nb_students DESC`, cols:['route_id','route_name','nb_students'], heads:['#','Route','Students']},
+    {title:'Q2 — Bus Fill Rate', color:'var(--amber)', q:`SELECT t.trip_id, t.trip_date, r.route_name, b.bus_brand, b.max_capacity, (SELECT COUNT(*) FROM Subscription sub WHERE sub.route_id=t.route_id AND sub.status='active') AS enrolled FROM Trip t JOIN Bus b ON t.bus_id=b.bus_id JOIN Route r ON t.route_id=r.route_id ORDER BY t.trip_date DESC LIMIT 20`, cols:['trip_id','trip_date','route_name','bus_brand','max_capacity','enrolled'], heads:['#','Date','Route','Bus','Capacity','Enrolled']},
+    {title:'Q4 — Students Without Subscription', color:'var(--red)', q:`SELECT st.student_id, st.last_name, st.first_name, st.email FROM Student st WHERE st.status='active' AND NOT EXISTS (SELECT 1 FROM Subscription s WHERE s.student_id=st.student_id AND s.status='active')`, cols:['student_id','last_name','first_name','email'], heads:['#','Last','First','Email']},
+    {title:'Q7 — Most Loaded Lines', color:'var(--blue)', q:`SELECT r.route_id, r.route_name, COUNT(s.student_id) AS nb_abonnements FROM Route r JOIN Subscription s ON r.route_id=s.route_id AND s.status='active' GROUP BY r.route_id ORDER BY nb_abonnements DESC`, cols:['route_id','route_name','nb_abonnements'], heads:['#','Route','Subscriptions']},
+    {title:'Q8 — Delayed Trips', color:'var(--red)', q:`SELECT t.trip_id, t.trip_date, r.route_name, b.bus_brand, sc.departure_time AS planned_departure, t.actual_departure_time AS actual_departure FROM Trip t JOIN Schedule sc ON t.schedule_id=sc.schedule_id JOIN Route r ON t.route_id=r.route_id JOIN Bus b ON t.bus_id=b.bus_id WHERE t.status='delayed' OR (t.actual_departure_time IS NOT NULL AND t.actual_departure_time>sc.departure_time)`, cols:['trip_id','trip_date','route_name','bus_brand','planned_departure','actual_departure'], heads:['#','Date','Route','Bus','Planned','Actual']},
+    {title:'Q5 — Full Subscription History', color:'var(--purple)', q:`SELECT sub.subscription_id, st.last_name||' '||st.first_name AS student, r.route_name, sub.start_date, sub.end_date, sub.status FROM Subscription sub JOIN Student st ON sub.student_id=st.student_id JOIN Route r ON sub.route_id=r.route_id ORDER BY sub.start_date DESC`, cols:['subscription_id','student','route_name','start_date','end_date','status'], heads:['#','Student','Route','Start','End','Status']},
+  ];
+  document.getElementById('views-grid').innerHTML = views.map(v => {
+    const rows = dbQuery(v.q);
+    return `<div class="view-card">
+      <div class="view-card-head" style="color:${v.color}">${v.title} <span style="color:var(--muted);font-size:10px">${rows.length} rows</span></div>
+      <div class="view-card-body">${buildTable(rows, v.cols, v.heads)}</div>
+    </div>`;
+  }).join('');
+}
+
+function replaceTable(name, html) {
+  const el = document.getElementById('tbl-'+name);
+  if (!el) return;
+  const wrap = el.closest('.tbl-scroll');
+  if (wrap) wrap.innerHTML = html;
+  // restore id
+  const t = wrap && wrap.querySelector('table');
+  if (t) t.id = 'tbl-'+name;
+}
+
+// ────────────────────────────────────────────────
+// MODAL SYSTEM
+// ────────────────────────────────────────────────
+const MODALS = {
+  student: {
+    title: id => id ? 'Edit Student' : 'Add Student',
+    load: id => id ? dbQuery(`SELECT * FROM Student WHERE student_id=?`, [id])[0] : {},
+    fields: d => `<div class="form-grid">
+      <div class="form-group"><label class="form-label">Last Name *</label><input class="form-input" id="f-last_name" value="${d.last_name||''}" required></div>
+      <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="f-first_name" value="${d.first_name||''}"></div>
+      <div class="form-group form-full"><label class="form-label">Email *</label><input class="form-input" id="f-email" type="email" value="${d.email||''}"></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="f-phone_num" value="${d.phone_num||''}"></div>
+      <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f-status"><option ${d.status==='active'?'selected':''}>active</option><option ${d.status==='inactive'?'selected':''}>inactive</option></select></div>
+      <div class="form-group form-full"><label class="form-label">Address</label><input class="form-input" id="f-address" value="${d.address||''}"></div>
+    </div>`,
+    save: (id, d) => {
+      const vals = [d.last_name, d.first_name, d.email, d.phone_num, d.address, d.status];
+      if (id) dbRun(`UPDATE Student SET last_name=?,first_name=?,email=?,phone_num=?,address=?,status=? WHERE student_id=?`, [...vals, id]);
+      else dbRun(`INSERT INTO Student (last_name,first_name,email,phone_num,address,status) VALUES (?,?,?,?,?,?)`, vals);
+      renderStudents(); updateCounts();
+    },
+    collect: () => ({last_name:v('f-last_name'),first_name:v('f-first_name'),email:v('f-email'),phone_num:v('f-phone_num'),address:v('f-address'),status:v('f-status')})
+  },
+
+  route: {
+    title: id => id ? 'Edit Route' : 'Add Route',
+    load: id => id ? dbQuery(`SELECT * FROM Route WHERE route_id=?`, [id])[0] : {},
+    fields: d => `<div class="form-grid">
+      <div class="form-group form-full"><label class="form-label">Route Name *</label><input class="form-input" id="f-route_name" value="${d.route_name||''}"></div>
+      <div class="form-group form-full"><label class="form-label">Description</label><textarea class="form-textarea" id="f-description">${d.description||''}</textarea></div>
+      <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f-status"><option ${d.status==='active'?'selected':''}>active</option><option ${d.status==='inactive'?'selected':''}>inactive</option><option ${d.status==='suspended'?'selected':''}>suspended</option></select></div>
+    </div>`,
+    save: (id, d) => {
+      if (id) dbRun(`UPDATE Route SET route_name=?,description=?,status=? WHERE route_id=?`, [d.route_name,d.description,d.status,id]);
+      else dbRun(`INSERT INTO Route (route_name,description,status) VALUES (?,?,?)`, [d.route_name,d.description,d.status]);
+      renderRoutes(); updateCounts();
+    },
+    collect: () => ({route_name:v('f-route_name'),description:v('f-description'),status:v('f-status')})
+  },
+
+  stop: {
+    title: id => id ? 'Edit Stop' : 'Add Stop',
+    load: id => id ? dbQuery(`SELECT * FROM Stop WHERE stop_id=?`, [id])[0] : {},
+    fields: d => `<div class="form-grid">
+      <div class="form-group form-full"><label class="form-label">Stop Name *</label><input class="form-input" id="f-stop_name" value="${d.stop_name||''}"></div>
+      <div class="form-group form-full"><label class="form-label">Address</label><input class="form-input" id="f-address" value="${d.address||''}"></div>
+    </div>`,
+    save: (id, d) => {
+      if (id) dbRun(`UPDATE Stop SET stop_name=?,address=? WHERE stop_id=?`, [d.stop_name,d.address,id]);
+      else dbRun(`INSERT INTO Stop (stop_name,address) VALUES (?,?)`, [d.stop_name,d.address]);
+      renderStops(); updateCounts();
+      // Refresh available stops if route-stops panel is active
+      if (rsCurrentRouteId) { renderAvailableStops(rsCurrentRouteId); populateAddStopDropdown(rsCurrentRouteId); }
+    },
+    collect: () => ({stop_name:v('f-stop_name'),address:v('f-address')})
+  },
+
+  bus: {
+    title: id => id ? 'Edit Bus' : 'Add Bus',
+    load: id => id ? dbQuery(`SELECT * FROM Bus WHERE bus_id=?`, [id])[0] : {},
+    fields: d => `<div class="form-grid">
+      <div class="form-group"><label class="form-label">Brand</label><input class="form-input" id="f-bus_brand" value="${d.bus_brand||''}"></div>
+      <div class="form-group"><label class="form-label">Max Capacity *</label><input class="form-input" id="f-max_capacity" type="number" min="1" value="${d.max_capacity||50}"></div>
+      <div class="form-group"><label class="form-label">Year of Service</label><input class="form-input" id="f-year_of_service" type="number" value="${d.year_of_service||new Date().getFullYear()}"></div>
+      <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f-bus_status">
+        ${['available','in_service','maintenance','out_of_service'].map(s=>`<option ${d.bus_status===s?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+    </div>`,
+    save: (id, d) => {
+      if (id) dbRun(`UPDATE Bus SET bus_brand=?,max_capacity=?,year_of_service=?,bus_status=? WHERE bus_id=?`, [d.bus_brand,d.max_capacity,d.year_of_service,d.bus_status,id]);
+      else dbRun(`INSERT INTO Bus (bus_brand,max_capacity,year_of_service,bus_status) VALUES (?,?,?,?)`, [d.bus_brand,d.max_capacity,d.year_of_service,d.bus_status]);
+      renderBuses(); updateCounts();
+    },
+    collect: () => ({bus_brand:v('f-bus_brand'),max_capacity:v('f-max_capacity'),year_of_service:v('f-year_of_service'),bus_status:v('f-bus_status')})
+  },
+
+  assignment: {
+    title: id => id ? 'Edit Assignment' : 'Assign Bus to Route',
+    load: id => id ? dbQuery(`SELECT * FROM Bus_Assignment WHERE assignment_id=?`, [id])[0] : {},
+    fields: d => {
+      const buses = dbQuery(`SELECT bus_id, bus_brand, bus_status FROM Bus WHERE bus_status != 'out_of_service' ORDER BY bus_id`);
+      const routes = dbQuery(`SELECT route_id, route_name FROM Route ORDER BY route_id`);
+      return `<div class="form-grid">
+        <div class="form-group"><label class="form-label">Bus *</label><select class="form-select" id="f-bus_id">${buses.map(b=>`<option value="${b.bus_id}" ${d.bus_id==b.bus_id?'selected':''}>#${b.bus_id} ${b.bus_brand} (${b.bus_status})</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Route *</label><select class="form-select" id="f-route_id">${routes.map(r=>`<option value="${r.route_id}" ${d.route_id==r.route_id?'selected':''}>${r.route_name}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Start Date *</label><input class="form-input" id="f-start_date" type="date" value="${d.start_date||today()}"></div>
+        <div class="form-group"><label class="form-label">End Date</label><input class="form-input" id="f-end_date" type="date" value="${d.end_date||''}"></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f-status">${['active','ended','cancelled'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      </div>`;
+    },
+    save: (id, d) => {
+      if (id) dbRun(`UPDATE Bus_Assignment SET bus_id=?,route_id=?,start_date=?,end_date=?,status=? WHERE assignment_id=?`, [d.bus_id,d.route_id,d.start_date,d.end_date||null,d.status,id]);
+      else dbRun(`INSERT INTO Bus_Assignment (bus_id,route_id,start_date,end_date,status) VALUES (?,?,?,?,?)`, [d.bus_id,d.route_id,d.start_date,d.end_date||null,d.status||'active']);
+      renderAssignments(); updateCounts();
+    },
+    collect: () => ({bus_id:v('f-bus_id'),route_id:v('f-route_id'),start_date:v('f-start_date'),end_date:v('f-end_date'),status:v('f-status')})
+  },
+
+  subscription: {
+    title: id => id ? 'Edit Subscription' : 'Subscribe Student to Route',
+    load: id => id ? dbQuery(`SELECT * FROM Subscription WHERE subscription_id=?`, [id])[0] : {},
+    fields: d => {
+      const students = dbQuery(`SELECT student_id, last_name||' '||first_name AS name FROM Student WHERE status='active' ORDER BY last_name`);
+      const routes   = dbQuery(`SELECT route_id, route_name FROM Route ORDER BY route_id`);
+      return `<div class="form-grid">
+        <div class="form-group"><label class="form-label">Student *</label><select class="form-select" id="f-student_id">${students.map(s=>`<option value="${s.student_id}" ${d.student_id==s.student_id?'selected':''}>${s.name}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Route *</label><select class="form-select" id="f-route_id">${routes.map(r=>`<option value="${r.route_id}" ${d.route_id==r.route_id?'selected':''}>${r.route_name}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Start Date *</label><input class="form-input" id="f-start_date" type="date" value="${d.start_date||today()}"></div>
+        <div class="form-group"><label class="form-label">End Date</label><input class="form-input" id="f-end_date" type="date" value="${d.end_date||''}"></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f-status">${['active','expired','cancelled'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      </div>
+      ${!d.subscription_id?'<p style="font-size:12px;color:var(--amber);margin-top:8px">⚡ Business rule: any existing active subscription for this student will be automatically expired.</p>':''}`;
+    },
+    save: (id, d) => {
+      if (id) {
+        dbRun(`UPDATE Subscription SET student_id=?,route_id=?,start_date=?,end_date=?,status=? WHERE subscription_id=?`, [d.student_id,d.route_id,d.start_date,d.end_date||null,d.status,id]);
+      } else {
+        subscribeStudent(d.student_id, d.route_id, d.start_date);
+      }
+      renderSubscriptions(); updateCounts();
+    },
+    collect: () => ({student_id:v('f-student_id'),route_id:v('f-route_id'),start_date:v('f-start_date'),end_date:v('f-end_date'),status:v('f-status')})
+  },
+
+  schedule: {
+    title: id => id ? 'Edit Schedule' : 'Add Schedule',
+    load: id => id ? dbQuery(`SELECT * FROM Schedule WHERE schedule_id=?`, [id])[0] : {},
+    fields: d => {
+      const routes = dbQuery(`SELECT route_id, route_name FROM Route ORDER BY route_id`);
+      const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+      return `<div class="form-grid">
+        <div class="form-group form-full"><label class="form-label">Route *</label><select class="form-select" id="f-route_id">${routes.map(r=>`<option value="${r.route_id}" ${d.route_id==r.route_id?'selected':''}>${r.route_name}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Day *</label><select class="form-select" id="f-day_of_week">${days.map(day=>`<option ${d.day_of_week===day?'selected':''}>${day}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Departure Time *</label><input class="form-input" id="f-departure_time" type="time" value="${d.departure_time||'07:00'}"></div>
+        <div class="form-group"><label class="form-label">Est. Arrival Time *</label><input class="form-input" id="f-estimated_arrival_time" type="time" value="${d.estimated_arrival_time||'07:45'}"></div>
+      </div>`;
+    },
+    save: (id, d) => {
+      if (id) dbRun(`UPDATE Schedule SET route_id=?,day_of_week=?,departure_time=?,estimated_arrival_time=? WHERE schedule_id=?`, [d.route_id,d.day_of_week,d.departure_time,d.estimated_arrival_time,id]);
+      else dbRun(`INSERT INTO Schedule (route_id,day_of_week,departure_time,estimated_arrival_time) VALUES (?,?,?,?)`, [d.route_id,d.day_of_week,d.departure_time,d.estimated_arrival_time]);
+      renderSchedules(); updateCounts();
+    },
+    collect: () => ({route_id:v('f-route_id'),day_of_week:v('f-day_of_week'),departure_time:v('f-departure_time'),estimated_arrival_time:v('f-estimated_arrival_time')})
+  },
+
+  trip: {
+    title: id => id ? 'Edit Trip' : 'Record Trip',
+    load: id => id ? dbQuery(`SELECT * FROM Trip WHERE trip_id=?`, [id])[0] : {},
+    fields: d => {
+      const schedules = dbQuery(`SELECT sc.schedule_id, r.route_name, sc.day_of_week, sc.departure_time FROM Schedule sc JOIN Route r ON sc.route_id=r.route_id ORDER BY sc.schedule_id`);
+      const buses = dbQuery(`SELECT bus_id, bus_brand FROM Bus WHERE bus_status != 'out_of_service' ORDER BY bus_id`);
+      const routes = dbQuery(`SELECT route_id, route_name FROM Route ORDER BY route_id`);
+      const statuses = ['scheduled','in_progress','completed','cancelled','delayed'];
+      return `<div class="form-grid">
+        <div class="form-group form-full"><label class="form-label">Schedule *</label><select class="form-select" id="f-schedule_id">${schedules.map(s=>`<option value="${s.schedule_id}" ${d.schedule_id==s.schedule_id?'selected':''}>${s.route_name} — ${s.day_of_week} ${s.departure_time}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Bus *</label><select class="form-select" id="f-bus_id">${buses.map(b=>`<option value="${b.bus_id}" ${d.bus_id==b.bus_id?'selected':''}>#${b.bus_id} ${b.bus_brand}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Route *</label><select class="form-select" id="f-route_id">${routes.map(r=>`<option value="${r.route_id}" ${d.route_id==r.route_id?'selected':''}>${r.route_name}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Trip Date *</label><input class="form-input" id="f-trip_date" type="date" value="${d.trip_date||today()}"></div>
+        <div class="form-group"><label class="form-label">Actual Departure</label><input class="form-input" id="f-actual_departure_time" type="time" value="${d.actual_departure_time||''}"></div>
+        <div class="form-group"><label class="form-label">Actual Arrival</label><input class="form-input" id="f-actual_arrival_time" type="time" value="${d.actual_arrival_time||''}"></div>
+        <div class="form-group form-full"><label class="form-label">Status</label><select class="form-select" id="f-status">${statuses.map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      </div>`;
+    },
+    save: (id, d) => {
+      if (id) dbRun(`UPDATE Trip SET schedule_id=?,bus_id=?,route_id=?,trip_date=?,actual_departure_time=?,actual_arrival_time=?,status=? WHERE trip_id=?`,
+        [d.schedule_id,d.bus_id,d.route_id,d.trip_date,d.actual_departure_time||null,d.actual_arrival_time||null,d.status,id]);
+      else dbRun(`INSERT INTO Trip (schedule_id,bus_id,route_id,trip_date,actual_departure_time,actual_arrival_time,status) VALUES (?,?,?,?,?,?,?)`,
+        [d.schedule_id,d.bus_id,d.route_id,d.trip_date,d.actual_departure_time||null,d.actual_arrival_time||null,d.status||'scheduled']);
+      renderTrips(); updateCounts();
+    },
+    collect: () => ({schedule_id:v('f-schedule_id'),bus_id:v('f-bus_id'),route_id:v('f-route_id'),trip_date:v('f-trip_date'),actual_departure_time:v('f-actual_departure_time'),actual_arrival_time:v('f-actual_arrival_time'),status:v('f-status')})
+  },
+
+  incident: {
+    title: id => id ? 'Edit Incident' : 'Log Incident',
+    load: id => id ? dbQuery(`SELECT * FROM Incident WHERE incident_id=?`, [id])[0] : {},
+    fields: d => {
+      const trips = dbQuery(`SELECT t.trip_id, t.trip_date, r.route_name FROM Trip t JOIN Route r ON t.route_id=r.route_id ORDER BY t.trip_date DESC, t.trip_id DESC LIMIT 50`);
+      const types = ['breakdown','accident','delay','other'];
+      return `<div class="form-grid">
+        <div class="form-group form-full"><label class="form-label">Trip *</label><select class="form-select" id="f-trip_id">${trips.map(t=>`<option value="${t.trip_id}" ${d.trip_id==t.trip_id?'selected':""}>#${t.trip_id} — ${t.trip_date} — ${t.route_name}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Type *</label><select class="form-select" id="f-incident_type">${types.map(t=>`<option ${d.incident_type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Date *</label><input class="form-input" id="f-date_incident" type="date" value="${d.date_incident||today()}"></div>
+        <div class="form-group"><label class="form-label">Time *</label><input class="form-input" id="f-incident_time" type="time" value="${d.incident_time||''}"></div>
+        <div class="form-group form-full"><label class="form-label">Description</label><textarea class="form-textarea" id="f-description">${d.description||''}</textarea></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="f-status">${['open','resolved','closed'].map(s=>`<option ${d.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      </div>`;
+    },
+    save: (id, d) => {
+      if (id) dbRun(`UPDATE Incident SET trip_id=?,incident_type=?,description=?,date_incident=?,incident_time=?,status=? WHERE incident_id=?`,
+        [d.trip_id,d.incident_type,d.description,d.date_incident,d.incident_time,d.status,id]);
+      else dbRun(`INSERT INTO Incident (trip_id,incident_type,description,date_incident,incident_time,status) VALUES (?,?,?,?,?,?)`,
+        [d.trip_id,d.incident_type,d.description,d.date_incident,d.incident_time,d.status||'open']);
+      renderIncidents(); updateCounts();
+    },
+    collect: () => ({trip_id:v('f-trip_id'),incident_type:v('f-incident_type'),description:v('f-description'),date_incident:v('f-date_incident'),incident_time:v('f-incident_time'),status:v('f-status')})
+  },
+};
+
+// ────────────────────────────────────────────────
+// MODAL OPEN / CLOSE / SUBMIT
+// ────────────────────────────────────────────────
+function openModal(type, id) {
+  currentModal = type;
+  editingId = id || null;
+  const cfg = MODALS[type];
+  const data = cfg.load(id);
+  document.getElementById('modal-title').textContent = cfg.title(id);
+  document.getElementById('modal-body').innerHTML = cfg.fields(data || {});
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  currentModal = null; editingId = null;
+}
+
+function submitModal() {
+  if (!currentModal) return;
+  const cfg = MODALS[currentModal];
+  try {
+    const data = cfg.collect();
+    cfg.save(editingId, data);
+    closeModal();
+    toast('Saved successfully', 'success');
+    renderDashboard();
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+// ────────────────────────────────────────────────
+// CONFIRM DELETE
+// ────────────────────────────────────────────────
+function confirmDelete(table, pkCol, id, label) {
+  document.getElementById('confirm-msg').innerHTML = `Are you sure you want to delete <strong>${label}</strong>? This action cannot be undone.`;
+  document.getElementById('confirm-overlay').classList.add('open');
+  document.getElementById('confirm-ok').onclick = () => {
+    try {
+      dbRun(`DELETE FROM ${table} WHERE ${pkCol}=?`, [id]);
+      closeConfirm();
+      toast(`Deleted ${label}`, 'success');
+      refreshAll();
+    } catch(e) {
+      closeConfirm();
+      toast('Cannot delete: ' + e.message, 'error');
+    }
+  };
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+// ────────────────────────────────────────────────
+// FILTER TABLE
+// ────────────────────────────────────────────────
+function filterTable(id, query) {
+  const t = document.getElementById(id);
+  if (!t) return;
+  const q = query.toLowerCase();
+  t.querySelectorAll('tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ────────────────────────────────────────────────
+// TOAST
+// ────────────────────────────────────────────────
+function toast(msg, type='info') {
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type==='success'?'✓':type==='error'?'✕':'ℹ'}</span> ${msg}`;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ────────────────────────────────────────────────
+// UTILS
+// ────────────────────────────────────────────────
+function v(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function today() { return new Date().toISOString().split('T')[0]; }
+
+// ────────────────────────────────────────────────
+// ROUTE STOPS MANAGEMENT
+// ────────────────────────────────────────────────
+let rsCurrentRouteId = null;
+let rsDragSrc = null;
+
+function initRouteStopsPanel() {
+  const routes = dbQuery(`SELECT route_id, route_name FROM Route ORDER BY route_id`);
+  const sel = document.getElementById('rs-route-select');
+  sel.innerHTML = '<option value="">— Choose a route —</option>' +
+    routes.map(r => `<option value="${r.route_id}">${r.route_name}</option>`).join('');
+}
+
+// Called from Routes table "Stops" button — jumps straight to that route
+function openRouteStops(routeId) {
+  // Switch to Route Stops panel
+  const sidebarItem = [...document.querySelectorAll('.sidebar-item')].find(el => el.textContent.includes('Route Stops'));
+  showPanel('routestops', sidebarItem);
+  // Set the selector and load
+  initRouteStopsPanel();
+  document.getElementById('rs-route-select').value = routeId;
+  loadRouteStops(routeId);
+}
+
+function loadRouteStops(routeId) {
+  routeId = parseInt(routeId);
+  rsCurrentRouteId = routeId || null;
+  const placeholder = document.getElementById('rs-placeholder');
+  const body = document.getElementById('rs-body');
+
+  if (!routeId) {
+    placeholder.style.display = 'block';
+    body.style.display = 'none';
+    document.getElementById('rs-stop-count').textContent = '';
+    return;
+  }
+
+  placeholder.style.display = 'none';
+  body.style.display = 'flex';
+
+  renderCurrentStops(routeId);
+  renderAvailableStops(routeId);
+  populateAddStopDropdown(routeId);
+}
+
+function renderCurrentStops(routeId) {
+  const stops = dbQuery(`
+    SELECT cr.route_id, cr.stop_id, cr.sequence_order, cr.estimated_passing_time,
+           s.stop_name, s.address
+    FROM Covers_Route cr
+    JOIN Stop s ON cr.stop_id = s.stop_id
+    WHERE cr.route_id = ?
+    ORDER BY cr.sequence_order`, [routeId]);
+
+  document.getElementById('rs-stop-count').textContent =
+    stops.length ? `${stops.length} stop${stops.length>1?'s':''}` : 'No stops yet';
+
+  const list = document.getElementById('rs-current-list');
+  if (!stops.length) {
+    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">No stops on this route yet.<br>Add stops from the right panel.</div>`;
+    return;
+  }
+
+  list.innerHTML = stops.map((s, i) => `
+    <div class="rs-stop-item" draggable="true"
+         data-stop-id="${s.stop_id}" data-seq="${s.sequence_order}"
+         ondragstart="rsDragStart(event,this)"
+         ondragover="rsDragOver(event,this)"
+         ondragleave="rsDragLeave(this)"
+         ondrop="rsDrop(event,this)">
+      <div class="rs-stop-seq">${s.sequence_order}</div>
+      <div class="rs-stop-info">
+        <div class="rs-stop-name">${s.stop_name}</div>
+        <div class="rs-stop-addr">${s.address||''}</div>
+      </div>
+      <div class="rs-stop-time">
+        <input type="time" value="${s.estimated_passing_time||''}"
+               style="background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--amber);font-family:var(--font-m);font-size:11px;padding:3px 6px;outline:none;width:90px"
+               onchange="updatePassingTime(${routeId},${s.stop_id},this.value)"
+               title="Estimated passing time">
+      </div>
+      <button class="rs-stop-del" onclick="removeStopFromRoute(${routeId},${s.stop_id})" title="Remove from route">✕</button>
+    </div>`).join('');
+}
+
+function renderAvailableStops(routeId) {
+  const all   = dbQuery(`SELECT * FROM Stop ORDER BY stop_name`);
+  const onRoute = new Set(dbQuery(`SELECT stop_id FROM Covers_Route WHERE route_id=?`,[routeId]).map(r=>r.stop_id));
+
+  const list = document.getElementById('rs-available-list');
+  if (!all.length) {
+    list.innerHTML = `<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">No stops created yet.</div>`;
+    return;
+  }
+  list.innerHTML = all.map(s => `
+    <div class="rs-avail-item ${onRoute.has(s.stop_id)?'already-added':''}" data-name="${s.stop_name.toLowerCase()}">
+      <div>
+        <div style="font-size:13px;font-weight:500">${s.stop_name}</div>
+        <div style="font-size:11px;color:var(--muted)">${s.address||''}</div>
+      </div>
+      ${onRoute.has(s.stop_id)
+        ? `<span style="margin-left:auto;font-family:var(--font-m);font-size:10px;color:var(--green)">✓ on route</span>`
+        : `<button class="rs-add-btn" onclick="quickAddStop(${routeId},${s.stop_id},'${s.stop_name.replace(/'/g,"\\'")}')">+ Add</button>`}
+    </div>`).join('');
+}
+
+function populateAddStopDropdown(routeId) {
+  const onRoute = new Set(dbQuery(`SELECT stop_id FROM Covers_Route WHERE route_id=?`,[routeId]).map(r=>r.stop_id));
+  const all = dbQuery(`SELECT * FROM Stop ORDER BY stop_name`).filter(s => !onRoute.has(s.stop_id));
+  const nextSeq = (dbQuery(`SELECT MAX(sequence_order) m FROM Covers_Route WHERE route_id=?`,[routeId])[0].m || 0) + 1;
+
+  const sel = document.getElementById('rs-add-stop-id');
+  sel.innerHTML = all.length
+    ? all.map(s=>`<option value="${s.stop_id}">${s.stop_name}</option>`).join('')
+    : '<option value="">No unassigned stops available</option>';
+  document.getElementById('rs-add-seq').value = nextSeq;
+}
+
+function filterAvailableStops(query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll('#rs-available-list .rs-avail-item').forEach(el => {
+    el.style.display = el.dataset.name.includes(q) ? '' : 'none';
+  });
+}
+
+// ── Drag & Drop reorder ──
+function rsDragStart(e, el) {
+  rsDragSrc = el;
+  el.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function rsDragOver(e, el) {
+  e.preventDefault();
+  if (el !== rsDragSrc) el.classList.add('drag-over');
+}
+function rsDragLeave(el) { el.classList.remove('drag-over'); }
+function rsDrop(e, el) {
+  e.preventDefault();
+  el.classList.remove('drag-over');
+  if (!rsDragSrc || el === rsDragSrc) return;
+  const list = document.getElementById('rs-current-list');
+  const items = [...list.querySelectorAll('.rs-stop-item')];
+  const fromIdx = items.indexOf(rsDragSrc);
+  const toIdx   = items.indexOf(el);
+  if (fromIdx < toIdx) el.after(rsDragSrc);
+  else el.before(rsDragSrc);
+  rsDragSrc.classList.remove('dragging');
+  // Re-number displayed sequences
+  [...list.querySelectorAll('.rs-stop-item')].forEach((item, i) => {
+    item.querySelector('.rs-stop-seq').textContent = i + 1;
+    item.dataset.seq = i + 1;
+  });
+}
+
+// ── Save reordered sequence to DB ──
+function saveRouteStopOrder() {
+  if (!rsCurrentRouteId) return;
+  const items = [...document.querySelectorAll('#rs-current-list .rs-stop-item')];
+  items.forEach((item, i) => {
+    dbRun(`UPDATE Covers_Route SET sequence_order=? WHERE route_id=? AND stop_id=?`,
+      [i+1, rsCurrentRouteId, parseInt(item.dataset.stopId)]);
+  });
+  saveDB();
+  toast('Stop order saved', 'success');
+  renderCurrentStops(rsCurrentRouteId);
+  renderRoutes();
+}
+
+// ── Quick-add from available panel ──
+function quickAddStop(routeId, stopId, stopName) {
+  const nextSeq = (dbQuery(`SELECT MAX(sequence_order) m FROM Covers_Route WHERE route_id=?`,[routeId])[0].m || 0) + 1;
+  try {
+    dbRun(`INSERT INTO Covers_Route (route_id, stop_id, sequence_order, estimated_passing_time) VALUES (?,?,?,NULL)`,
+      [routeId, stopId, nextSeq]);
+    toast(`Added "${stopName}" to route`, 'success');
+    renderCurrentStops(routeId);
+    renderAvailableStops(routeId);
+    populateAddStopDropdown(routeId);
+    renderRoutes();
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+}
+
+// ── Add from inline form ──
+function addStopToRoute() {
+  if (!rsCurrentRouteId) return;
+  const stopId = parseInt(document.getElementById('rs-add-stop-id').value);
+  const seq    = parseInt(document.getElementById('rs-add-seq').value);
+  const time   = document.getElementById('rs-add-time').value || null;
+  if (!stopId) { toast('Select a stop first', 'error'); return; }
+  try {
+    dbRun(`INSERT OR REPLACE INTO Covers_Route (route_id, stop_id, sequence_order, estimated_passing_time) VALUES (?,?,?,?)`,
+      [rsCurrentRouteId, stopId, seq, time]);
+    toast('Stop added to route', 'success');
+    renderCurrentStops(rsCurrentRouteId);
+    renderAvailableStops(rsCurrentRouteId);
+    populateAddStopDropdown(rsCurrentRouteId);
+    renderRoutes();
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+}
+
+// ── Remove stop from route ──
+function removeStopFromRoute(routeId, stopId) {
+  dbRun(`DELETE FROM Covers_Route WHERE route_id=? AND stop_id=?`, [routeId, stopId]);
+  toast('Stop removed from route', 'success');
+  renderCurrentStops(routeId);
+  renderAvailableStops(routeId);
+  populateAddStopDropdown(routeId);
+  renderRoutes();
+}
+
+// ── Update passing time inline ──
+function updatePassingTime(routeId, stopId, time) {
+  dbRun(`UPDATE Covers_Route SET estimated_passing_time=? WHERE route_id=? AND stop_id=?`,
+    [time||null, routeId, stopId]);
+  toast('Passing time updated', 'success');
+}
+
+// Init route selector when panel loads
+const _origShowPanel = showPanel;
+window.showPanel = function(name, el) {
+  _origShowPanel(name, el);
+  if (name === 'routestops') initRouteStopsPanel();
+}
+
+// ────────────────────────────────────────────────
+// KEYBOARD SHORTCUTS
+// ────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeConfirm(); }
+  if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) submitModal();
+});
+</script>
+</body>
+</html>
